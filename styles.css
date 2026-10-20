@@ -1,0 +1,246 @@
+:root {
+    --bg-principal: #121212;
+    --bg-tarjeta: #1a1a1a;
+    --texto: #ffffff;
+    --texto-secundario: #aaaaaa;
+    --verde: #00ff66;
+    --rojo: #ff3333;
+    --azul: #00bcff;
+    --borde: #333333;
+}
+
+body {
+    margin: 0;
+    padding: 30px;
+    background-color: var(--bg-principal);
+    color: var(--texto);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-sizing: border-box;
+    height: 100vh; /* Asegura que el cuerpo ocupe toda la pantalla */
+    display: flex;
+    flex-direction: column;
+}
+
+h1 {
+    font-size: 1.5rem;
+    color: var(--verde);
+    margin-top: 0;
+    margin-bottom: 5px;
+}
+
+.instrucciones {
+    font-size: 0.9rem;
+    color: var(--texto-secundario);
+    margin-bottom: 25px;
+}
+
+.instrucciones strong {
+    color: var(--texto);
+    background-color: #222;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #444;
+}
+
+/* Tabla de registros adaptada de forma dinámica a la altura de la ventana */
+.contenedor-tabla {
+    position: relative;
+    width: 100%;
+    /* Calcula el espacio restante restando los márgenes, el título y los controles superiores */
+    height: calc(100vh - 180px); 
+    overflow-y: auto;   /* Activa el scroll vertical interno */
+    overflow-x: auto;   /* Activa el scroll horizontal si la pantalla se reduce */
+    background-color: var(--bg-tarjeta);
+    border: 1px solid var(--borde);
+    border-radius: 6px;
+    flex-grow: 1;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.95rem;
+}
+
+/* Encabezados pegados arriba al hacer scroll */
+th {
+    position: sticky;
+    top: 0;
+    background-color: #222222;
+    color: var(--verde);
+    font-weight: 600;
+    z-index: 20;
+}
+
+th, td {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--borde);
+}
+
+tr:hover {
+    background-color: #222222;
+}
+
+.positivo { color: var(--verde); }
+.negativo { color: var(--rojo); }
+.nota-celda { font-size: 0.85rem; color: var(--texto-secundario); font-style: italic; }
+
+/* Ventana Modal del Formulario (F1) */
+.modal {
+    display: none; 
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.75);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-contenido {
+    background-color: var(--bg-tarjeta);
+    border: 1px solid var(--verde);
+    padding: 25px;
+    border-radius: 8px;
+    width: 400px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.modal-contenido h2 {
+    margin-top: 0;
+    font-size: 1.2rem;
+    color: var(--verde);
+    margin-bottom: 20px;
+}
+
+.grupo-campo {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.grupo-campo label {
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+    color: var(--texto-secundario);
+}
+
+.grupo-campo input, .grupo-campo select, .grupo-campo textarea {
+    background-color: #252525;
+    border: 1px solid var(--borde);
+    color: #fff;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    outline: none;
+}
+
+.grupo-campo input:focus, .grupo-campo select:focus, .grupo-campo textarea:focus {
+    border-color: var(--verde);
+}
+
+.modal-botones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.btn-guardar { background-color: var(--verde); color: #000; }
+.btn-cancelar { background-color: #444; color: #fff; }
+
+/* Resaltado para la fila seleccionada mediante teclado o ratón */
+tr.seleccionada {
+    background-color: #0b2916 !important;
+    outline: 1px solid var(--verde);
+}
+
+/* TOTALES FIJOS AL FONDO ABSOLUTO DEL CONTENEDOR */
+tfoot {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.5);
+}
+
+tfoot tr {
+    background-color: #222222 !important;
+    font-weight: bold;
+    border-top: 2px solid var(--borde);
+}
+
+tfoot td {
+    padding: 14px 15px;
+    color: #ffffff;
+}
+
+tfoot td.titulo-total {
+    color: var(--azul);
+    letter-spacing: 0.5px;
+}
+
+/* Estilos para el selector de periodos superior */
+.barra-navegacion {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.selector-periodo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--bg-tarjeta);
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--borde);
+}
+
+.selector-periodo select {
+    background-color: #252525;
+    border: 1px solid var(--borde);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    outline: none;
+    cursor: pointer;
+}
+
+.selector-periodo select:focus {
+    border-color: var(--verde);
+}
+
+.btn-nav {
+    background-color: #252525;
+    border: 1px solid var(--borde);
+    color: var(--verde);
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background-color 0.2s;
+}
+
+.btn-nav:hover {
+    background-color: #333;
+}
+
+/* Fila de acumulado histórico fija al fondo */
+tfoot tr.fila-acumulado-historico {
+    background-color: #1a1a1a !important;
+    border-top: 1px dashed var(--borde);
+}

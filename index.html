@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Tiempo Laboral</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Nueva barra superior de control de periodo -->
+    <div class="barra-navegacion">
+        <h1>Panel de Control de Tiempo</h1>
+        <div class="selector-periodo">
+            <button id="btn-mes-anterior" class="btn-nav">◀</button>
+            <select id="select-mes"></select>
+            <select id="select-anio"></select>
+            <button id="btn-mes-siguiente" class="btn-nav">▶</button>
+        </div>
+    </div>
+
+    <div class="instrucciones">
+        Comandos de teclado: <strong>F1</strong> Nuevo Registro | <strong>F2</strong> Editar | <strong>F3</strong> Borrar | <strong>F5</strong> Guardar Fichero | <strong>F6</strong> Cargar Fichero <br>
+        Navegación: <strong>↑ / ↓</strong> Moverse entre filas | <strong>← / →</strong> Cambiar de Mes
+    </div>
+
+    <!-- Tabla de visualización -->
+    <div class="contenedor-tabla">
+        <table id="tabla-registros">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Entrada</th>
+                    <th>Salida</th>
+                    <th>Tiempo No Trabajo</th>
+                    <th>Tiempo Trabajado</th>
+                    <th>Horario</th>
+                    <th>Diferencial</th>
+                    <th>Descripción / Notas</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Las filas se generarán dinámicamente desde JavaScript -->
+            </tbody>
+            <tfoot>
+                <!-- La fila de totales globales se inyectará aquí -->
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- Formulario flotante (Modal) para el Registro (F1) -->
+    <div id="modal-registro" class="modal">
+        <div class="modal-contenido">
+            <h2>Nuevo Registro de Jornada</h2>
+            <form id="form-registro">
+                <div class="grupo-campo">
+                    <label for="fecha">Fecha de Entrada</label>
+                    <input type="date" id="fecha" required>
+                </div>
+                <div class="grupo-campo">
+                    <label for="hora-entrada">Hora de Entrada</label>
+                    <input type="time" id="hora-entrada" required>
+                </div>
+                <div class="grupo-campo">
+                    <label for="hora-salida">Hora de Salida</label>
+                    <input type="time" id="hora-salida" required>
+                </div>
+                <div class="grupo-campo">
+                    <label for="tiempo-no-trabajo">Tiempo No Trabajo (minutos)</label>
+                    <input type="number" id="tiempo-no-trabajo" min="0" value="0" required>
+                </div>
+                <div class="grupo-campo">
+                    <label for="horario-predefinido">Horario Predefinido</label>
+                    <select id="horario-predefinido" required></select>
+                </div>
+                <div class="grupo-campo">
+                    <label for="descripcion">Descripción (Opcional)</label>
+                    <textarea id="descripcion" rows="2" placeholder="Notas sobre el día... (ej. tiempo de comida)"></textarea>
+                </div>
+                <div class="modal-botones">
+                    <button type="button" class="btn btn-cancelar" id="btn-cerrar-modal">Cancelar</button>
+                    <button type="submit" class="btn btn-guardar">Agregar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="calculos.js"></script>
+    <script src="main_ui.js"></script>
+    <script src="main_core.js"></script>
+</body>
+</html>
