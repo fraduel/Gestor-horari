@@ -158,16 +158,26 @@ function actualizarTablaPantalla() {
         });
 
         const fechaFormateada = reg.fecha.split('-').reverse().join('/');
-        const claseClave = calculos.minutosDiferencial >= 0 ? "positivo" : "negativo";
+
+	// Renderizado condicional si es jornada extraordinaria
+        let celdaTrabajado = formatearMinutos(calculos.minutosTrabajados);
+        let celdaDiferencial = formatearMinutos(calculos.minutosDiferencial, true);
+        let claseClave = calculos.minutosDiferencial >= 0 ? "positivo" : "negativo";
+
+	if (calculos.esExtraordinaria) {
+            celdaTrabajado = `${formatearMinutos(calculos.minutosRealesExtras)} (Extras)`;
+            celdaDiferencial = "Ø"; // Símbolo de conjunto vacío / no aplica cálculo
+            claseClave = "nota-celda"; // Tono gris neutro
+        }
 
         fila.innerHTML = `
             <td>${fechaFormateada}</td>
             <td>${reg.entrada}</td>
             <td>${reg.salida}</td>
             <td>${reg.tiempoNoTrabajo || 0} m</td>
-            <td>${formatearMinutos(calculos.minutosTrabajados)}</td>
+            <td>${celdaTrabajado}</td>
             <td>${calculos.horarioTexto}</td>
-            <td class="${claseClave}">${formatearMinutos(calculos.minutosDiferencial, true)}</td>
+            <td class="${claseClave}">${celdaDiferencial}</td>
             <td class="nota-celda">${reg.descripcion || '-'}</td>
         `;
         tablaBody.appendChild(fila);
