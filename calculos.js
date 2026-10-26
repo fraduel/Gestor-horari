@@ -23,15 +23,26 @@ function calcularTiempos(reg) {
 
     // 3. Obtener el diferencial respecto al horario teórico predefinido
     const minutosTeoricos = (horarioObjeto.horas * 60) + horarioObjeto.minutos;
-    const minutosDiferencial = minutosTrabajados - minutosTeoricos;
+    let minutosDiferencial = minutosTrabajados - minutosTeoricos;
+
+    // --- LOGICA ESPECIAL PARA HORAS EXTRAORDINARIAS ---
+    if (reg.horarioId === "horas_extraordinarias") {
+        return {
+            minutosTrabajados: 0,    // 0 para que no sume en el acumulador del tfoot
+            minutosDiferencial: 0,   // 0 para que no altere el diferencial mensual/histórico
+            horarioTexto: `${horarioObjeto.descripcion}`,
+            minutosRealesExtras: minutosTrabajados, // Guardamos el valor real para mostrarlo visualmente en la fila
+            esExtraordinaria: true
+        };
+    }
 
     return {
         minutosTrabajados,
         minutosDiferencial,
-        horarioTexto: `${horarioObjeto.descripcion}`
+        horarioTexto: `${horarioObjeto.descripcion}`,
+        esExtraordinaria: false
     };
 }
-
 /**
  * Transforma una cantidad de minutos en una cadena legible "Xh Ym"
  * @param {number} minutosTotales - Minutos a convertir
