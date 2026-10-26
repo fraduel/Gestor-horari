@@ -6,8 +6,9 @@
 const HORARIOS_POR_DEFECTO = [
     { id: "horario_continuado", descripcion: "Horario Continuado", horas: 7, minutos: 30 },
     { id: "horario_partido", descripcion: "Horario Partido", horas: 8, minutos: 30 },
-    { id: "turno_abierto_1", descripcion: "Turno abierto Mañana", horas: 7, minutos: 30 },
-    { id: "turno_abierto_2", descripcion: "Turno abierto Tarde", horas: 7, minutos: 30 }
+    { id: "turno_abierto_1", descripcion: "Turno abierto Mañana", horas: 8, minutos: 30 },
+    { id: "turno_abierto_2", descripcion: "Turno abierto Tarde", horas: 8, minutos: 30 },
+    { id: "horas_extraordinarias", descripcion: "Horas extraordinarias", horas: 0, minutos: 0 }
 ];
 
 // Array dinámico de horarios activos
@@ -33,11 +34,20 @@ try {
             listaRegistros = estadoCargado.registros || [];
             if (estadoCargado.horarios && Array.isArray(estadoCargado.horarios) && estadoCargado.horarios.length > 0) {
                 HORARIOS_PREDEFINIDOS = estadoCargado.horarios;
+                
+                // COMPROBACIÓN EXTRAS: Si el nuevo horario no existe en el localStorage, lo añadimos
+                HORARIOS_POR_DEFECTO.forEach(horarioBase => {
+                    const existe = HORARIOS_PREDEFINIDOS.some(h => h.id === horarioBase.id);
+                    if (!existe) {
+                        HORARIOS_PREDEFINIDOS.push(horarioBase);
+                    }
+                });
             }
         } 
         // Estructura antigua (Array simple de registros)
         else if (Array.isArray(estadoCargado)) {
             listaRegistros = estadoCargado;
+            HORARIOS_PREDEFINIDOS = [...HORARIOS_POR_DEFECTO];
         }
     }
 } catch (e) {
