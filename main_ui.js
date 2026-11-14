@@ -94,10 +94,27 @@ function abrirModal() {
         const mesFormato = (mesActual + 1).toString().padStart(2, '0');
         inputFecha.value = `${anioActual}-${mesFormato}-${diaHoy}`;
         
-        document.getElementById('hora-entrada').value = "09:00";
-        document.getElementById('hora-salida').value = "18:00";
-        document.getElementById('tiempo-no-trabajo').value = "0"; 
-        selectHorarios.selectedIndex = 0;
+        document.getElementById('hora-entrada').value = "00:00";
+        document.getElementById('hora-salida').value = "00:00";
+        document.getElementById('tiempo-correccion').value = "0"; 
+        
+        // Buscar el último horario usado que NO sea extraordinarias ni descanso
+        let horarioPorDefecto = "";
+        for (let i = listaRegistros.length - 1; i >= 0; i--) {
+            const idActual = listaRegistros[i].horarioId;
+            if (idActual && idActual !== "horas_extraordinarias" && idActual !== "horario_descanso") {
+                horarioPorDefecto = idActual;
+                break;
+            }
+        }
+
+
+        if (horarioPorDefecto && HORARIOS_PREDEFINIDOS.some(h => h.id === horarioPorDefecto)) {
+            selectHorarios.value = horarioPorDefecto;
+        } else {
+            selectHorarios.selectedIndex = 0;
+        }
+
         document.getElementById('descripcion').value = "";
     } else {
         modalTitulo.textContent = "Editar Registro de Jornada";
@@ -105,14 +122,19 @@ function abrirModal() {
         inputFecha.value = reg.fecha;
         document.getElementById('hora-entrada').value = reg.entrada;
         document.getElementById('hora-salida').value = reg.salida;
-        document.getElementById('tiempo-no-trabajo').value = reg.tiempoNoTrabajo || 0;
+        
+        // Carga tiempoCorreccion (o convierte tiempoNoTrabajo antiguo a negativo)
+        const valCorreccion = reg.tiempoCorreccion !== undefined 
+            ? reg.tiempoCorreccion 
+            : -(reg.tiempoNoTrabajo || 0);
+        document.getElementById('tiempo-correccion').value = valCorreccion;
+        
         selectHorarios.value = reg.horarioId;
         document.getElementById('descripcion').value = reg.descripcion;
     }
     
     modal.style.display = 'flex';
 
-    // SOLUCIÓN PARTE 1: Forzar el foco de inmediato en el primer campo al abrir
     setTimeout(() => {
         inputFecha.focus();
     }, 50);
