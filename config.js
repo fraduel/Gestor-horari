@@ -8,8 +8,10 @@ const HORARIOS_POR_DEFECTO = [
     { id: "horario_partido", descripcion: "Horario Partido", horas: 8, minutos: 30 },
     { id: "turno_abierto_1", descripcion: "Turno abierto Mañana", horas: 8, minutos: 30 },
     { id: "turno_abierto_2", descripcion: "Turno abierto Tarde", horas: 8, minutos: 30 },
-    { id: "horas_extraordinarias", descripcion: "Horas extraordinarias", horas: 0, minutos: 0 }
+    { id: "horas_extraordinarias", descripcion: "Horas extraordinarias", horas: 0, minutos: 0 },
+    { id: "horario_descanso", descripcion: "Horario de Descanso", horas: 0, minutos: 0 }
 ];
+
 
 // Array dinámico de horarios activos
 let HORARIOS_PREDEFINIDOS = [...HORARIOS_POR_DEFECTO];
