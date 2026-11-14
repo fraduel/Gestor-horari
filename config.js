@@ -9,7 +9,7 @@ const HORARIOS_POR_DEFECTO = [
     { id: "turno_abierto_1", descripcion: "Turno abierto Mañana", horas: 8, minutos: 30 },
     { id: "turno_abierto_2", descripcion: "Turno abierto Tarde", horas: 8, minutos: 30 },
     { id: "horas_extraordinarias", descripcion: "Horas extraordinarias", horas: 0, minutos: 0 },
-    { id: "horario_descanso", descripcion: "Horario de Descanso", horas: 0, minutos: 0 }
+    { id: "horario_correccion", descripcion: "Horario de Corrección", horas: 0, minutos: 0 }
 ];
 
 
