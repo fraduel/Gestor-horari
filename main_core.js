@@ -92,14 +92,15 @@ function borrarRegistroSeleccionado() {
 formRegistro.addEventListener('submit', function(e) {
     e.preventDefault();
 
-    const datosRegistro = {
+        const datosRegistro = {
         fecha: document.getElementById('fecha').value,
         entrada: document.getElementById('hora-entrada').value,
         salida: document.getElementById('hora-salida').value,
-        tiempoNoTrabajo: parseInt(document.getElementById('tiempo-no-trabajo').value, 10) || 0,
+        tiempoCorreccion: parseInt(document.getElementById('tiempo-correccion').value, 10) || 0,
         horarioId: selectHorarios.value,
         descripcion: document.getElementById('descripcion').value
     };
+
 
     if (indiceEdicion === -1) {
         listaRegistros.push(datosRegistro);
@@ -136,7 +137,7 @@ function actualizarTablaPantalla() {
     const tablaFoot = document.querySelector('#tabla-registros tfoot');
     tablaFoot.innerHTML = ""; 
 
-    let acumuladoNoTrabajo = 0;
+    let acumuladoCorreccion = 0;
     let acumuladoTrabajado = 0;
     let acumuladoDiferencial = 0;
 
@@ -144,13 +145,17 @@ function actualizarTablaPantalla() {
         const calculos = calcularTiempos(reg);
         const fila = document.createElement('tr');
         
-        acumuladoNoTrabajo += (reg.tiempoNoTrabajo || 0);
+        // Obtener corrección (con compatibilidad para registros viejos)
+        const correccionActual = reg.tiempoCorreccion !== undefined 
+            ? reg.tiempoCorreccion 
+            : -(reg.tiempoNoTrabajo || 0);
+
+        acumuladoCorreccion += correccionActual;
         acumuladoTrabajado += calculos.minutosTrabajados;
         acumuladoDiferencial += calculos.minutosDiferencial;
 
         if (index === indiceSeleccionado) fila.classList.add('seleccionada');
 
-        // Manejo directo de clase activa para evitar bucles infinitos
         fila.addEventListener('click', () => {
             document.querySelectorAll('#tabla-registros tbody tr').forEach(tr => tr.classList.remove('seleccionada'));
             fila.classList.add('seleccionada');
@@ -159,22 +164,28 @@ function actualizarTablaPantalla() {
 
         const fechaFormateada = reg.fecha.split('-').reverse().join('/');
 
-	// Renderizado condicional si es jornada extraordinaria
         let celdaTrabajado = formatearMinutos(calculos.minutosTrabajados);
         let celdaDiferencial = formatearMinutos(calculos.minutosDiferencial, true);
         let claseClave = calculos.minutosDiferencial >= 0 ? "positivo" : "negativo";
 
-	if (calculos.esExtraordinaria) {
+        if (calculos.esExtraordinaria) {
             celdaTrabajado = `${formatearMinutos(calculos.minutosRealesExtras)} (Extras)`;
-            celdaDiferencial = "Ø"; // Símbolo de conjunto vacío / no aplica cálculo
-            claseClave = "nota-celda"; // Tono gris neutro
+            celdaDiferencial = "Ø";
+            claseClave = "nota-celda";
+        } else if (calculos.esDescanso) {
+            celdaTrabajado = "0h 0m (Descanso)";
+            // celdaDiferencial ya contiene "-Xh Ym" y claseClave ya es "negativo"
         }
+
+
+        // Formatear visualmente el signo + si es mayor que 0
+        const textoCorreccion = correccionActual > 0 ? `+${correccionActual} m` : `${correccionActual} m`;
 
         fila.innerHTML = `
             <td>${fechaFormateada}</td>
             <td>${reg.entrada}</td>
             <td>${reg.salida}</td>
-            <td>${reg.tiempoNoTrabajo || 0} m</td>
+            <td>${textoCorreccion}</td>
             <td>${celdaTrabajado}</td>
             <td>${calculos.horarioTexto}</td>
             <td class="${claseClave}">${celdaDiferencial}</td>
@@ -187,10 +198,11 @@ function actualizarTablaPantalla() {
     if (registrosFiltrados.length > 0) {
         const filaTotales = document.createElement('tr');
         const claseTotalDiferencial = acumuladoDiferencial >= 0 ? "positivo" : "negativo";
+        const textoAcumuladoCorreccion = acumuladoCorreccion > 0 ? `+${acumuladoCorreccion} m` : `${acumuladoCorreccion} m`;
 
         filaTotales.innerHTML = `
             <td colspan="3" class="titulo-total">TOTALES DEL MES:</td>
-            <td>${acumuladoNoTrabajo} m</td>
+            <td>${textoAcumuladoCorreccion}</td>
             <td>${formatearMinutos(acumuladoTrabajado)}</td>
             <td>-</td>
             <td class="${claseTotalDiferencial}">${formatearMinutos(acumuladoDiferencial, true)}</td>
@@ -199,11 +211,10 @@ function actualizarTablaPantalla() {
         tablaFoot.appendChild(filaTotales);
     }
 
-    // 2. FILA DE TOTAL ACUMULADO HISTÓRICO
+    // 2. FILA DE TOTAL ACUMULADO HISTÓRICO (se mantiene igual)
     if (listaRegistros.length > 0) {
         let totalGlobalDiferencial = 0;
 
-        // Únicamente calculamos el diferencial histórico acumulado
         listaRegistros.forEach(reg => {
             const calculosGlobales = calcularTiempos(reg);
             totalGlobalDiferencial += calculosGlobales.minutosDiferencial;
@@ -213,7 +224,6 @@ function actualizarTablaPantalla() {
         const claseGlobalDiferencial = totalGlobalDiferencial >= 0 ? "positivo" : "negativo";
         filaTotalAcumulado.classList.add('fila-acumulado-historico');
 
-        // Tiempos omitidos usando '-' en sus respectivas columnas
         filaTotalAcumulado.innerHTML = `
             <td colspan="3" class="titulo-total" style="color: #ff9900;">TOTAL ACUMULADO:</td>
             <td>-</td>
@@ -226,99 +236,7 @@ function actualizarTablaPantalla() {
     }
 }
 
-// --- OPERACIONES DE FICHEROS NATIVAS ---
-// --- OPERACIONES DE FICHEROS NATIVAS (COMPATIBLE EDGM, FIREFOX, ETC.) ---
-async function guardarFicheroTXT() {
-    if (listaRegistros.length === 0) {
-        alert("No hay registros globales para exportar.");
-        return;
-    }
-
-    const contenidoTexto = JSON.stringify(listaRegistros, null, 2);
-
-    if ('showSaveFilePicker' in window) {
-        try {
-            const opciones = {
-                suggestedName: `control_tiempo_${anioActual}.txt`,
-                types: [{
-                    description: 'Fichero de Control de Tiempo (.txt)',
-                    accept: {'text/plain': ['.txt']},
-                }],
-            };
-            const handle = await window.showSaveFilePicker(opciones);
-            const writable = await handle.createWritable();
-            await writable.write(contenidoTexto);
-            await writable.close();
-            alert("Registros guardados con éxito.");
-            return;
-        } catch (error) { 
-            console.log("Guardado con File System Access cancelado o no permitido:", error); 
-        }
-    } 
-    
-    // Fallback universal (Firefox i navegadors sense suport)
-    const blob = new Blob([contenidoTexto], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const enlace = document.createElement('a');
-    enlace.href = url;
-    enlace.download = `control_tiempo_${anioActual}.txt`;
-    enlace.click();
-    URL.revokeObjectURL(url);
-    alert("Registros descargados con éxito.");
-}
-
-async function cargarFicheroTXT() {
-    if ('showOpenFilePicker' in window) {
-        try {
-            const opciones = {
-                types: [{
-                    description: 'Fichero de Control de Tiempo (.txt)',
-                    accept: {'text/plain': ['.txt']},
-                }],
-                multiple: false
-            };
-
-            const [handle] = await window.showOpenFilePicker(opciones);
-            const file = await handle.getFile();
-            const textoCargado = await file.text();
-            
-            procesarEInyectarDatos(textoCargado);
-            return;
-        } catch (error) { 
-            console.log("Lectura con File System Access cancelada:", error); 
-        }
-    } 
-    
-    // Fallback universal (Firefox i navegadors sense suport)
-    const inputOculto = document.createElement('input');
-    inputOculto.type = 'file';
-    inputOculto.accept = '.txt,.json';
-    inputOculto.onchange = evento => {
-        const archivo = evento.target.files[0]; // Correcció del FileList
-        if (!archivo) return;
-        
-        const lector = new FileReader();
-        lector.onload = eLector => procesarEInyectarDatos(eLector.target.result);
-        lector.readAsText(archivo);
-    };
-    inputOculto.click();
-}
-
-function procesarEInyectarDatos(textoEstructurado) {
-    try {
-        const datosDecodificados = JSON.parse(textoEstructurado);
-        if (Array.isArray(datosDecodificados)) {
-            listaRegistros = datosDecodificados;
-            guardarEnLocalStorage(); 
-            cargarPeriodo();
-            alert(`Se cargaron ${listaRegistros.length} registros globales exitosamente.`);
-        } else { throw new Error(); }
-    } catch (err) {
-        alert("Error: El archivo seleccionado no tiene un formato válido para esta aplicación.");
-    }
-}
-
-/// --- FUNCIÓN AUXILIAR PARA PERSISTENCIA AUTOMÁTICA EN LOCALSTORAGE ---
+// --- FUNCIÓN AUXILIAR PARA PERSISTENCIA AUTOMÁTICA EN LOCALSTORAGE ---
 function guardarEnLocalStorage() {
     try {
         const datosAGuardar = {
@@ -331,14 +249,13 @@ function guardarEnLocalStorage() {
     }
 }
 
-// --- OPERACIONES DE FICHEROS NATIVAS (COMPATIBLES Y CON HORARIOS) ---
+// --- OPERACIONES DE FICHEROS NATIVAS (COMPATIBLE CON CHROME, EDGE, FIREFOX, SAFARI) ---
 async function guardarFicheroTXT() {
     if (listaRegistros.length === 0 && HORARIOS_PREDEFINIDOS.length === 0) {
         alert("No hay datos para exportar.");
         return;
     }
 
-    // Guardamos la estructura combinada con horarios y registros
     const objetoExportacion = {
         horarios: HORARIOS_PREDEFINIDOS,
         registros: listaRegistros
@@ -346,10 +263,11 @@ async function guardarFicheroTXT() {
 
     const contenidoTexto = JSON.stringify(objetoExportacion, null, 2);
 
+    // 1. Navegadores con File System Access API (Chrome, Edge, Opera)
     if ('showSaveFilePicker' in window) {
         try {
             const opciones = {
-                suggestedName: `control_tiempo_${anioActual}.txt`,
+                suggestedName: `control_tiempo.txt`,
                 types: [{
                     description: 'Fichero de Control de Tiempo (.txt)',
                     accept: {'text/plain': ['.txt']},
@@ -361,21 +279,26 @@ async function guardarFicheroTXT() {
             await writable.close();
             alert("Registros y horarios guardados con éxito.");
             return;
-        } catch (error) { console.log("Guardado cancelado o no permitido:", error); }
+        } catch (error) { 
+            // Si el usuario pulsa "Cancelar" en la ventana, detenemos aquí para no forzar descarga
+            if (error.name === 'AbortError') return;
+            console.log("Guardado nativo no permitido, usando descarga estándar:", error); 
+        }
     } 
 
-    // Fallback universal para Firefox o navegadores sin File System Access API
+    // 2. Fallback universal (Firefox, Safari y móviles)
     const blob = new Blob([contenidoTexto], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const enlace = document.createElement('a');
     enlace.href = url;
-    enlace.download = `control_tiempo_${anioActual}.txt`;
+    enlace.download = `control_tiempo.txt`;
     enlace.click();
     URL.revokeObjectURL(url);
     alert("Registros y horarios descargados con éxito.");
 }
 
 async function cargarFicheroTXT() {
+    // 1. Navegadores con File System Access API (Chrome, Edge, Opera)
     if ('showOpenFilePicker' in window) {
         try {
             const opciones = {
@@ -392,10 +315,13 @@ async function cargarFicheroTXT() {
             
             procesarEInyectarDatos(textoCargado);
             return;
-        } catch (error) { console.log("Lectura cancelada:", error); }
+        } catch (error) { 
+            if (error.name === 'AbortError') return;
+            console.log("Lectura nativa no disponible, usando selector estándar:", error); 
+        }
     } 
 
-    // Fallback universal
+    // 2. Fallback universal (Firefox, Safari y móviles)
     const inputOculto = document.createElement('input');
     inputOculto.type = 'file';
     inputOculto.accept = '.txt,.json';
@@ -414,25 +340,31 @@ function procesarEInyectarDatos(textoEstructurado) {
     try {
         const datosDecodificados = JSON.parse(textoEstructurado);
         
-        // 1. Caso: Formato nuevo (Objeto con horarios y registros)
+        // Caso 1: Formato nuevo (Objeto con horarios y registros)
         if (datosDecodificados && typeof datosDecodificados === 'object' && !Array.isArray(datosDecodificados)) {
             listaRegistros = datosDecodificados.registros || [];
             
             if (datosDecodificados.horarios && Array.isArray(datosDecodificados.horarios) && datosDecodificados.horarios.length > 0) {
                 HORARIOS_PREDEFINIDOS = datosDecodificados.horarios;
+                
+                // Asegurar que nuevos horarios como "horario_descanso" existan aunque el archivo sea antiguo
+                HORARIOS_POR_DEFECTO.forEach(horarioBase => {
+                    if (!HORARIOS_PREDEFINIDOS.some(h => h.id === horarioBase.id)) {
+                        HORARIOS_PREDEFINIDOS.push(horarioBase);
+                    }
+                });
             } else {
                 HORARIOS_PREDEFINIDOS = [...HORARIOS_POR_DEFECTO];
             }
         } 
-        // 2. Caso: Formato antiguo (Array simple solo con registros)
+        // Caso 2: Formato antiguo (Array simple solo con registros)
         else if (Array.isArray(datosDecodificados)) {
             listaRegistros = datosDecodificados;
-            HORARIOS_PREDEFINIDOS = [...HORARIOS_POR_DEFECTO]; // Asigna horarios por defecto
+            HORARIOS_PREDEFINIDOS = [...HORARIOS_POR_DEFECTO];
         } else { 
             throw new Error(); 
         }
 
-        // Actualizamos selectores e interfaz
         if (typeof inicializarHorarios === 'function') inicializarHorarios();
         guardarEnLocalStorage(); 
         cargarPeriodo();
@@ -441,6 +373,7 @@ function procesarEInyectarDatos(textoEstructurado) {
         alert("Error: El archivo seleccionado no tiene un formato válido para esta aplicación.");
     }
 }
+
 
 // ========================================================
 // --- ARRANQUE E INICIALIZACIÓN GENERAL DE LA APLICACIÓN ---
