@@ -22,6 +22,18 @@ function calcularTiempos(reg) {
         ? reg.tiempoCorreccion 
         : -(reg.tiempoNoTrabajo || 0);
 
+    // --- LÓGICA ESPECIAL PARA HORARIO DE CORRECCIÓN ---
+    if (reg.horarioId === "horario_correccion" || reg.horarioId === "horario_descanso") {
+        // Permite sumar o restar directamente sin tope en 0
+        const diferencialCorreccion = minutosBrutos + correccion;
+        return {
+            minutosTrabajados: 0,                        // No altera el total de horas trabajadas
+            minutosDiferencial: diferencialCorreccion,   // Suma (+) o resta (-) al diferencial
+            horarioTexto: "Horario de Corrección",
+            esCorreccion: true
+        };
+    }
+
     let minutosTrabajados = minutosBrutos + correccion;
     if (minutosTrabajados < 0) minutosTrabajados = 0;
 
@@ -36,16 +48,6 @@ function calcularTiempos(reg) {
         };
     }
 
-    // --- LÓGICA ESPECIAL PARA HORARIO DE DESCANSO ---
-    if (reg.horarioId === "horario_descanso") {
-        return {
-            minutosTrabajados: 0,                    // No suma tiempo trabajado al mes
-            minutosDiferencial: -minutosTrabajados,  // Resta directamente en el diferencial
-            horarioTexto: `${horarioObjeto.descripcion}`,
-            esDescanso: true
-        };
-    }
-
     // 3. Obtener el diferencial respecto al horario teórico predefinido
     const minutosTeoricos = (horarioObjeto.horas * 60) + horarioObjeto.minutos;
     let minutosDiferencial = minutosTrabajados - minutosTeoricos;
@@ -55,7 +57,7 @@ function calcularTiempos(reg) {
         minutosDiferencial,
         horarioTexto: `${horarioObjeto.descripcion}`,
         esExtraordinaria: false,
-        esDescanso: false
+        esCorreccion: false
     };
 }
 
