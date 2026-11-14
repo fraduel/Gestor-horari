@@ -172,10 +172,11 @@ function actualizarTablaPantalla() {
             celdaTrabajado = `${formatearMinutos(calculos.minutosRealesExtras)} (Extras)`;
             celdaDiferencial = "Ø";
             claseClave = "nota-celda";
-        } else if (calculos.esDescanso) {
-            celdaTrabajado = "0h 0m (Descanso)";
-            // celdaDiferencial ya contiene "-Xh Ym" y claseClave ya es "negativo"
+        } else if (calculos.esCorreccion) {
+            celdaTrabajado = "0h 0m (Corrección)";
+            // celdaDiferencial ya muestra "+Xh Ym" o "-Xh Ym" y claseClave aplica verde o rojo
         }
+
 
 
         // Formatear visualmente el signo + si es mayor que 0
@@ -345,9 +346,10 @@ function procesarEInyectarDatos(textoEstructurado) {
             listaRegistros = datosDecodificados.registros || [];
             
             if (datosDecodificados.horarios && Array.isArray(datosDecodificados.horarios) && datosDecodificados.horarios.length > 0) {
-                HORARIOS_PREDEFINIDOS = datosDecodificados.horarios;
+                // Filtramos el antiguo horario_descanso si existía en el fichero
+                HORARIOS_PREDEFINIDOS = datosDecodificados.horarios.filter(h => h.id !== "horario_descanso");
                 
-                // Asegurar que nuevos horarios como "horario_descanso" existan aunque el archivo sea antiguo
+                // Asegurar que nuevos horarios como "horario_correccion" existan
                 HORARIOS_POR_DEFECTO.forEach(horarioBase => {
                     if (!HORARIOS_PREDEFINIDOS.some(h => h.id === horarioBase.id)) {
                         HORARIOS_PREDEFINIDOS.push(horarioBase);
