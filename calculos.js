@@ -17,32 +17,48 @@ function calcularTiempos(reg) {
     let minutosBrutos = (hSalida * 60 + mSalida) - (hEntrada * 60 + mEntrada);
     if (minutosBrutos < 0) minutosBrutos += 24 * 60; // Mitigación de turno nocturno
 
-    // 2. Descontar los minutos de tiempo no trabajado
-    let minutosTrabajados = minutosBrutos - (reg.tiempoNoTrabajo || 0);
+    // 2. Aplicar el tiempo de corrección (positivo o negativo)
+    const correccion = reg.tiempoCorreccion !== undefined 
+        ? reg.tiempoCorreccion 
+        : -(reg.tiempoNoTrabajo || 0);
+
+    let minutosTrabajados = minutosBrutos + correccion;
     if (minutosTrabajados < 0) minutosTrabajados = 0;
+
+    // --- LÓGICA ESPECIAL PARA HORAS EXTRAORDINARIAS ---
+    if (reg.horarioId === "horas_extraordinarias") {
+        return {
+            minutosTrabajados: 0,
+            minutosDiferencial: 0,
+            horarioTexto: `${horarioObjeto.descripcion}`,
+            minutosRealesExtras: minutosTrabajados,
+            esExtraordinaria: true
+        };
+    }
+
+    // --- LÓGICA ESPECIAL PARA HORARIO DE DESCANSO ---
+    if (reg.horarioId === "horario_descanso") {
+        return {
+            minutosTrabajados: 0,                    // No suma tiempo trabajado al mes
+            minutosDiferencial: -minutosTrabajados,  // Resta directamente en el diferencial
+            horarioTexto: `${horarioObjeto.descripcion}`,
+            esDescanso: true
+        };
+    }
 
     // 3. Obtener el diferencial respecto al horario teórico predefinido
     const minutosTeoricos = (horarioObjeto.horas * 60) + horarioObjeto.minutos;
     let minutosDiferencial = minutosTrabajados - minutosTeoricos;
 
-    // --- LOGICA ESPECIAL PARA HORAS EXTRAORDINARIAS ---
-    if (reg.horarioId === "horas_extraordinarias") {
-        return {
-            minutosTrabajados: 0,    // 0 para que no sume en el acumulador del tfoot
-            minutosDiferencial: 0,   // 0 para que no altere el diferencial mensual/histórico
-            horarioTexto: `${horarioObjeto.descripcion}`,
-            minutosRealesExtras: minutosTrabajados, // Guardamos el valor real para mostrarlo visualmente en la fila
-            esExtraordinaria: true
-        };
-    }
-
     return {
         minutosTrabajados,
         minutosDiferencial,
         horarioTexto: `${horarioObjeto.descripcion}`,
-        esExtraordinaria: false
+        esExtraordinaria: false,
+        esDescanso: false
     };
 }
+
 /**
  * Transforma una cantidad de minutos en una cadena legible "Xh Ym"
  * @param {number} minutosTotales - Minutos a convertir
