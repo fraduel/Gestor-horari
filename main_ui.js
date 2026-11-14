@@ -98,16 +98,15 @@ function abrirModal() {
         document.getElementById('hora-salida').value = "00:00";
         document.getElementById('tiempo-correccion').value = "0"; 
         
-        // Buscar el último horario usado que NO sea extraordinarias ni descanso
+        // Buscar el último horario usado que NO sea extraordinarias ni corrección
         let horarioPorDefecto = "";
         for (let i = listaRegistros.length - 1; i >= 0; i--) {
             const idActual = listaRegistros[i].horarioId;
-            if (idActual && idActual !== "horas_extraordinarias" && idActual !== "horario_descanso") {
+            if (idActual && idActual !== "horas_extraordinarias" && idActual !== "horario_correccion" && idActual !== "horario_descanso") {
                 horarioPorDefecto = idActual;
                 break;
             }
         }
-
 
         if (horarioPorDefecto && HORARIOS_PREDEFINIDOS.some(h => h.id === horarioPorDefecto)) {
             selectHorarios.value = horarioPorDefecto;
