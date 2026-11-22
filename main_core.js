@@ -162,7 +162,14 @@ function actualizarTablaPantalla() {
             indiceSeleccionado = index;
         });
 
-        const fechaFormateada = reg.fecha.split('-').reverse().join('/');
+                // Obtener el día de la semana en texto
+        const diasSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+        const [anio, mes, dia] = reg.fecha.split('-').map(Number);
+        const fechaObj = new Date(anio, mes - 1, dia); // Se crea en hora local para evitar desfases de zona horaria
+        const nombreDia = diasSemana[fechaObj.getDay()];
+
+        const fechaFormateada = `${nombreDia}, ${reg.fecha.split('-').reverse().join('/')}`;
+
 
         let celdaTrabajado = formatearMinutos(calculos.minutosTrabajados);
         let celdaDiferencial = formatearMinutos(calculos.minutosDiferencial, true);
