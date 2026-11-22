@@ -109,12 +109,12 @@ formRegistro.addEventListener('submit', function(e) {
     }
 
     listaRegistros.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-
+    
     const [targetAnio, targetMes] = datosRegistro.fecha.split('-').map(Number);
     mesActual = targetMes - 1;
     anioActual = targetAnio;
     selectMes.value = mesActual;
-    selectAnio.value = anioActual;
+    if (typeof actualizarSelectorAnios === 'function') actualizarSelectorAnios();
 
     cargarPeriodo();
     
@@ -122,8 +122,10 @@ formRegistro.addEventListener('submit', function(e) {
     actualizarTablaPantalla();
 
     // Guardar automáticamente al añadir o editar
-    guardarEnLocalStorage(); 	
-
+    guardarEnLocalStorage(); 
+    if (typeof actualizarSelectorAnios === 'function') actualizarSelectorAnios();
+    cargarPeriodo();
+	
     cerrarModal();
 });
 
@@ -375,8 +377,10 @@ function procesarEInyectarDatos(textoEstructurado) {
         }
 
         if (typeof inicializarHorarios === 'function') inicializarHorarios();
+        if (typeof actualizarSelectorAnios === 'function') actualizarSelectorAnios();
         guardarEnLocalStorage(); 
         cargarPeriodo();
+
         alert(`Se cargaron ${listaRegistros.length} registros exitosamente.`);
     } catch (err) {
         alert("Error: El archivo seleccionado no tiene un formato válido para esta aplicación.");
