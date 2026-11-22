@@ -24,13 +24,7 @@ function inicializarControlesPeriodo() {
         selectMes.appendChild(opt);
     });
     
-    selectAnio.innerHTML = "";
-    for (let a = anioActual - 5; a <= anioActual + 5; a++) {
-        const opt = document.createElement('option');
-        opt.value = a;
-        opt.textContent = a;
-        selectAnio.appendChild(opt);
-    }
+    actualizarSelectorAnios();
 
     selectMes.value = mesActual;
     selectAnio.value = anioActual;
@@ -41,6 +35,36 @@ function inicializarControlesPeriodo() {
     btnMesAnterior.addEventListener('click', () => cambiarMes(-1));
     btnMesSiguiente.addEventListener('click', () => cambiarMes(1));
 }
+
+function actualizarSelectorAnios() {
+    const aniosDisponibles = new Set();
+    
+    // Siempre incluimos el año actual del sistema y el año que esté activo en pantalla
+    aniosDisponibles.add(new Date().getFullYear());
+    aniosDisponibles.add(anioActual);
+
+    // Extraemos todos los años únicos de los registros cargados
+    listaRegistros.forEach(reg => {
+        if (reg.fecha) {
+            const anioReg = parseInt(reg.fecha.split('-')[0], 10);
+            if (!isNaN(anioReg)) aniosDisponibles.add(anioReg);
+        }
+    });
+
+    // Ordenamos de menor a mayor (ej. 2018, 2019, 2026...)
+    const aniosOrdenados = Array.from(aniosDisponibles).sort((a, b) => a - b);
+
+    selectAnio.innerHTML = "";
+    aniosOrdenados.forEach(a => {
+        const opt = document.createElement('option');
+        opt.value = a;
+        opt.textContent = a;
+        selectAnio.appendChild(opt);
+    });
+
+    selectAnio.value = anioActual;
+}
+
 
 function inicializarHorarios() {
     selectHorarios.innerHTML = "";
@@ -64,9 +88,10 @@ function cambiarMes(direccion) {
         anioActual++;
     }
     selectMes.value = mesActual;
-    selectAnio.value = anioActual;
+    actualizarSelectorAnios(); // Asegura que el nuevo año exista en el <select>
     cargarPeriodo();
 }
+
 
 function cargarPeriodo() {
     registrosFiltrados = listaRegistros.filter(reg => {
